@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Smart POS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #receipt-section,
+            #receipt-section * {
+                visibility: visible;
+                display: block !important;
+            }
+
+            #receipt-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 h-screen overflow-hidden text-gray-800">
+
+    <div class="flex h-full">
+
+        <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] space-y-2"></div>
+
+        <!-- PRODUCTS -->
+        <section class="flex-1 flex flex-col p-4 bg-slate-50 border-r">
+
+            <header class="flex justify-between items-center mb-3">
+                <h1 class="text-xl font-bold text-indigo-600">Smart POS</h1>
+
+                <select id="categoryFilter" class="px-3 py-1.5 text-sm border rounded-md bg-white">
+                    <option value="All">All Categories</option>
+                </select>
+            </header>
+
+            <div id="productGrid"
+                class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 overflow-y-auto flex-1 pr-1 pb-10">
+
+                <p class="col-span-full text-center text-gray-400 mt-20">
+                    Loading services...
+                </p>
+            </div>
+        </section>
+
+        <!-- CART -->
+        <aside class="w-[360px] bg-white flex flex-col shadow-xl">
+
+            <div class="px-4 py-3 bg-indigo-600 text-white">
+                <h2 class="font-semibold">Current Order</h2>
+            </div>
+
+            <div id="cartItems" class="flex-1 overflow-y-auto p-3 space-y-2">
+                <p class="text-center text-gray-400 mt-10">Cart is empty</p>
+            </div>
+
+            <div class="p-4 border-t bg-slate-50 space-y-3">
+
+                <div class="flex gap-2">
+                    <select id="discountType" class="border rounded-md px-2 py-1 text-sm">
+                        <option value="percent">%</option>
+                        <option value="flat">₹</option>
+                    </select>
+
+                    <input id="discountValue" type="number" placeholder="Discount"
+                        class="border rounded-md px-2 py-1 w-full text-sm">
+                </div>
+
+                <div class="text-sm space-y-1">
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span id="subtotalDisplay">0.00</span>
+                    </div>
+                    <div class="flex justify-between text-red-500">
+                        <span>Discount</span>
+                        <span id="discountDisplay">-0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>GST (5%)</span>
+                        <span id="gstDisplay">0.00</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-lg border-t pt-2">
+                        <span>Total</span>
+                        <span id="finalTotalDisplay">₹0.00</span>
+                    </div>
+                </div>
+
+                <button id="checkoutBtn"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-md font-semibold">
+                    Checkout
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+
+        <div class="bg-white rounded-lg shadow-lg w-96 p-6">
+            <h2 class="text-lg font-bold mb-4">Confirm Order</h2>
+
+            <div class="space-y-3">
+                <input id="custName" placeholder="Customer Name" required class="w-full border rounded-md p-2 text-sm">
+                <input id="custMobile" placeholder="Mobile Number" required
+                    class="w-full border rounded-md p-2 text-sm">
+                <input id="custToken" placeholder="Table / Token No" required
+                    class="w-full border rounded-md p-2 text-sm">
+                <div class="flex gap-2">
+                    <select id="modalDiscountType" class="border rounded-md px-2 py-1 text-sm">
+                        <option value="percent">%</option>
+                        <option value="flat">₹</option>
+                    </select>
+                    <input id="modalDiscountValue" type="number" placeholder="Discount"
+                        class="border rounded-md px-2 py-1 w-full text-sm">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-5">
+                <button id="cancelModal" class="px-4 py-2 text-gray-500 text-sm">Cancel</button>
+                <button id="confirmOrder" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm">
+                    Confirm & Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECEIPT -->
+    <div id="receipt-section" class="hidden bg-white p-3 max-w-xs mx-auto text-xs font-mono">
+
+        <h2 class="text-center font-bold text-lg mb-1">POS SYSTEM</h2>
+        <p class="text-center mb-2">Sales Receipt</p>
+
+        <div class="border-b pb-2 mb-2">
+            <p>Order: <span id="recOrderId"></span></p>
+            <p>Date: <span id="recDate"></span></p>
+            <p>Customer: <span id="recCustomer"></span></p>
+        </div>
+
+        <div id="recItems" class="mb-2"></div>
+
+        <div class="border-t pt-2 text-right space-y-1">
+            <p>Subtotal: <span id="recSubtotal"></span></p>
+            <p>Discount: <span id="recDiscount"></span></p>
+            <p>GST: <span id="recGST"></span></p>
+            <p class="font-bold">TOTAL: <span id="recTotal"></span></p>
+        </div>
+
+        <p class="text-center mt-3">*** THANK YOU ***</p>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+
+</html>
