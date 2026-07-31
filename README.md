@@ -55,7 +55,3 @@ Contributions are welcome! Feel free to:
 - Report bugs via GitHub Issues
 - Submit pull requests for improvements
 - Suggest new features
-
----
-
-**Made with ❤️ by sahibaGalaxy02**
